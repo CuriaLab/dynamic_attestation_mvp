@@ -16,7 +16,7 @@ contract CuriaResolver is ICuriaResolver, Ownable, SchemaResolver {
 
     /// @notice Emitted when an issuer's status is updated
     /// @param account The address of the issuer
-    /// @param enabled The new status of the issuer (true if enabled)
+    /// @param enabled The new status of the issuer 
     event IssuerUpdated(address indexed account, bool enabled);
 
     /// @notice Custom error for unauthorized issuers
@@ -44,7 +44,7 @@ contract CuriaResolver is ICuriaResolver, Ownable, SchemaResolver {
         emit IssuerUpdated(account, enable);
     }
 
-    /// @inheritdoc SchemaResolver
+    
     /// @dev Checks issuer when attesting
     function onAttest(Attestation calldata attestation, uint256 value)
         internal
@@ -56,7 +56,7 @@ contract CuriaResolver is ICuriaResolver, Ownable, SchemaResolver {
         return true;
     }
 
-    /// @inheritdoc SchemaResolver
+    
     /// @dev No issuer check on revoke, always returns true
     function onRevoke(Attestation calldata /*attestation*/, uint256 /*value*/)
         internal
