@@ -50,6 +50,7 @@ def execute(date):
   # update data first
   begin_of_day = datetime.combine(date, time.min)
   data_date = (begin_of_day - timedelta(days=1))
+  data_date = data_date.replace(tzinfo=timezone.utc)
   data_date_str = data_date.strftime("%Y-%m-%d")
   delegates_df = query_delegates(data_date_str)
   fetch_daily_delegates(data_date.timestamp())
