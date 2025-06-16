@@ -29,11 +29,14 @@ contract CuriaResolverTest is Test {
     function setUp() public {
         schemaRegistry = new SchemaRegistry();
         eas = new EAS(schemaRegistry);
-        // register schema
+
+        // Deploy resolver and set issuer
         vm.startPrank(owner);
         resolver = new CuriaResolver(eas);
         resolver.setIssuer(issuer, true);
         vm.stopPrank();
+
+        // Register schema
         schemaId = schemaRegistry.register(schema, resolver, true);
         console.log("eas", address(eas));
     }
@@ -43,20 +46,28 @@ contract CuriaResolverTest is Test {
             recipient: anon,
             revocable: true,
             refUID: bytes32(0),
-            data: abi.encodeWithSignature(schema, "top100", true, "2024-11-09"),
+            data: abi.encode("top100", true, "2024-11-09"), //  fixed encoding
             expirationTime: 0,
             value: 0
         });
-        AttestationRequest memory request = AttestationRequest({schema: schemaId, data: data});
-        // begin with anon
+
+        AttestationRequest memory request = AttestationRequest({
+            schema: schemaId,
+            data: data
+        });
+
+        // Try with non-issuer (should fail)
         vm.startPrank(anon);
         vm.expectRevert(ICuriaResolver.NotIssuer.selector);
         eas.attest(request);
         vm.stopPrank();
-        // test with issuer
+
+        // Try with issuer (should pass)
         vm.startPrank(issuer);
         bytes32 attestId = eas.attest(request);
         vm.stopPrank();
+
+        // Assert attestation
         Attestation memory attestation = eas.getAttestation(attestId);
         assertEq(attestation.attester, issuer);
         assertEq(attestation.recipient, anon);
@@ -68,27 +79,42 @@ contract CuriaResolverTest is Test {
             recipient: anon,
             revocable: true,
             refUID: bytes32(0),
-            data: abi.encodeWithSignature(schema, "top100", true, "2024-11-09"),
+            data: abi.encode("top100", true, "2024-11-09"), //  fixed encoding
             expirationTime: 0,
             value: 0
         });
-        AttestationRequest memory request = AttestationRequest({schema: schemaId, data: data});
-        // test with issuer
+
+        AttestationRequest memory request = AttestationRequest({
+            schema: schemaId,
+            data: data
+        });
+
+        // Issuer attests
         vm.startPrank(issuer);
         bytes32 attestId = eas.attest(request);
         vm.stopPrank();
-        // test revoke with anon
-        RevocationRequestData memory revocationData = RevocationRequestData({uid: attestId, value: 0});
-        RevocationRequest memory revocation = RevocationRequest({schema: schemaId, data: revocationData});
+
+        // Try to revoke from non-issuer (should fail)
+        RevocationRequestData memory revocationData = RevocationRequestData({
+            uid: attestId,
+            value: 0
+        });
+
+        RevocationRequest memory revocation = RevocationRequest({
+            schema: schemaId,
+            data: revocationData
+        });
 
         vm.startPrank(anon);
         vm.expectRevert(AccessDenied.selector);
         eas.revoke(revocation);
         vm.stopPrank();
 
+        // Issuer revokes (should pass)
         vm.startPrank(issuer);
         eas.revoke(revocation);
         vm.stopPrank();
+
         Attestation memory attestation = eas.getAttestation(attestId);
         assertEq(attestation.revocationTime, block.timestamp);
     }
