@@ -48,10 +48,14 @@ app = FastAPI()
 def execute(date):
   print('execute')
   # update data first
-  date = date.replace(tzinfo=timezone.utc)
-  begin_of_day = datetime.combine(date, time.min)
+  print(date)
+  # date = date.replace(tzinfo=timezone.utc)
+  begin_of_day = datetime.combine(date.date(), time.min, tzinfo=timezone.utc)
   data_date = (begin_of_day - timedelta(days=1))
+  print(data_date)
   data_date_str = data_date.strftime("%Y-%m-%d")
+  print(data_date_str)
+  print(data_date.timestamp())
   delegates_df = query_delegates(data_date_str)
   fetch_daily_delegates(data_date.timestamp())
   fetch_daily_subdelegates(data_date.timestamp())
@@ -224,5 +228,5 @@ def handle_execute():
 @app.post("/execute/:{date}")
 def handle_execute(date: str):
   current = datetime.strptime(date, "%Y-%m-%d")
-  current = pytz.timezone('UTC').localize(current)
+  current = current.replace(tzinfo=timezone.utc)
   execute(current)

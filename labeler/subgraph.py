@@ -149,10 +149,13 @@ def fetch_daily_delegates(date: int):
       "Content-Type": "application/json",
       "Authorization": "Bearer " + api_key
     }
+    print(json)
     response = requests.post(url, json=json, headers=header)
     data = response.json()
     print(data)
     delegates = data['data']['dailyDelagates']
+    if last_id == "" and len(delegates) == 0:
+      raise Exception("No daily delegates found")
     for delegate in delegates:
       delegatesObjects.append({
         "date": datetime.fromtimestamp(delegate['date'], timezone.utc).strftime("%Y-%m-%d") ,
