@@ -210,10 +210,11 @@ def execute(date):
 
 @app.post("/fetch/:{date}")
 def handle_fetch(date: str):
-  print('fetch')
-  data_date = datetime.strptime(date, "%Y-%m-%d")
-  fetch_daily_delegates(data_date.timestamp())
-  fetch_daily_subdelegates(data_date.timestamp())
+  current = datetime.strptime(date, "%Y-%m-%d")
+  current = current.replace(tzinfo=timezone.utc)
+  begin_of_day = datetime.combine(current.date(), time.min, tzinfo=timezone.utc)
+  fetch_daily_delegates(begin_of_day.timestamp())
+  fetch_daily_subdelegates(begin_of_day.timestamp())
 
 @app.post("/execute")
 def handle_execute():
